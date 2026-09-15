@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+.DS_Store
+
+# Local source photos; never publish these in the public repository.
+Instagram/
+Instagram.zip
