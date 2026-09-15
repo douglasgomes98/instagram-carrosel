@@ -20,9 +20,7 @@ const ZOOM_STEP = 0.01;
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export function CropStudio() {
-  const [image, setImage] = useState(
-    `${import.meta.env.BASE_URL}assets/yogurt.jpg`,
-  );
+  const [image, setImage] = useState<string | null>(null);
   const [imageName, setImageName] = useState("imagem-instagram");
   const [format, setFormat] = useState<InstagramFormat>(defaultInstagramFormat);
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
@@ -71,7 +69,7 @@ export function CropStudio() {
   }
 
   async function downloadCrop() {
-    if (!croppedArea || exportState === "saving") return;
+    if (!image || !croppedArea || exportState === "saving") return;
     setExportState("saving");
 
     try {
@@ -148,7 +146,7 @@ export function CropStudio() {
             <strong>{format.label}</strong>
           </div>
           <label className="upload-button">
-            <Upload size={17} /> Trocar imagem
+            <Upload size={17} /> {image ? "Trocar imagem" : "Enviar imagem"}
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -161,25 +159,37 @@ export function CropStudio() {
           className="crop-frame"
           style={{ aspectRatio: `${format.width} / ${format.height}` }}
         >
-          <Cropper
-            image={image}
-            crop={crop}
-            zoom={zoom}
-            rotation={rotation}
-            aspect={format.width / format.height}
-            minZoom={1}
-            maxZoom={MAX_ZOOM}
-            zoomSpeed={0.12}
-            showGrid
-            cropShape="rect"
-            objectFit="contain"
-            restrictPosition
-            transform={`translate(${crop.x}px, ${crop.y}px) rotate(${rotation}deg) scale(${zoom}) scaleX(${flipHorizontal ? -1 : 1})`}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onRotationChange={setRotation}
-            onCropComplete={(_, pixels) => setCroppedArea(pixels)}
-          />
+          {image ? (
+            <Cropper
+              image={image}
+              crop={crop}
+              zoom={zoom}
+              rotation={rotation}
+              aspect={format.width / format.height}
+              minZoom={1}
+              maxZoom={MAX_ZOOM}
+              zoomSpeed={0.12}
+              showGrid
+              cropShape="rect"
+              objectFit="contain"
+              restrictPosition
+              transform={`translate(${crop.x}px, ${crop.y}px) rotate(${rotation}deg) scale(${zoom}) scaleX(${flipHorizontal ? -1 : 1})`}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onRotationChange={setRotation}
+              onCropComplete={(_, pixels) => setCroppedArea(pixels)}
+            />
+          ) : (
+            <label className="crop-empty">
+              <ImagePlus size={28} />
+              <span>Envie uma imagem para começar</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => selectImage(event.target.files?.[0])}
+              />
+            </label>
+          )}
         </div>
 
         <div className="crop-controls">

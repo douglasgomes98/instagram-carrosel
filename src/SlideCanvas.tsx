@@ -9,7 +9,9 @@ export function SlideCanvas({ slide, className = "" }: SlideCanvasProps) {
   if (slide.type === "cover") {
     return (
       <article className={`slide-canvas slide-cover ${className}`}>
-        <img className="cover-image" src={slide.image} alt="" />
+        {slide.image ? (
+          <img className="cover-image" src={slide.image} alt="" />
+        ) : null}
         <div className="cover-scrim" />
         <div className="slide-safe cover-content">
           <div className="slide-topline">
@@ -54,13 +56,6 @@ export function SlideCanvas({ slide, className = "" }: SlideCanvasProps) {
 
   return (
     <article className={`slide-canvas slide-checklist ${className}`}>
-      <div className="checklist-photo-wrap">
-        <img
-          className="checklist-photo"
-          src={`${import.meta.env.BASE_URL}assets/yogurt.jpg`}
-          alt=""
-        />
-      </div>
       <div className="slide-safe checklist-content">
         <div className="slide-topline dark">
           <span className="slide-mark light" aria-hidden="true">

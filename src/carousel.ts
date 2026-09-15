@@ -5,7 +5,7 @@ export type Slide =
       kicker: string;
       title: string;
       footer: string;
-      image: string;
+      image?: string;
     }
   | {
       id: number;
@@ -34,7 +34,6 @@ export const carousel = {
       kicker: "GUIA DE MERCADO · 01",
       title: "Nem todo iogurte é igual.",
       footer: "3 detalhes para olhar antes de escolher",
-      image: `${import.meta.env.BASE_URL}assets/yogurt.jpg`,
     },
     {
       id: 2,
