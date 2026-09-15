@@ -5,6 +5,13 @@ vite.config.js
 vite.config.d.ts
 .DS_Store
 
-# Local source photos; never publish these in the public repository.
-Instagram/
-Instagram.zip
+# Local archives and source images.
+*.zip
+*.[Hh][Ee][Ii][Cc]
+*.[Jj][Pp][Ee][Gg]
+*.[Jj][Pp][Gg]
+*.[Pp][Nn][Gg]
+*.[Ww][Ee][Bb][Pp]
+
+# Assets intentionally shipped with the application.
+!public/assets/**
