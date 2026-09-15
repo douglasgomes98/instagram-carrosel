@@ -1,62 +1,81 @@
-import { useRef, useState } from "react";
-import { toPng } from "html-to-image";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Crop, Images, ScanLine, Sparkles, UploadCloud } from "lucide-react";
+import { CreateStep } from "./CreateStep";
+import { CropStep } from "./CropStep";
+import { OptimizeStep } from "./OptimizeStep";
 import {
-  Check,
-  Crop,
-  Download,
-  Images,
-  ScanLine,
-  Sparkles,
-} from "lucide-react";
-import { carousel } from "./carousel";
-import { CropStudio } from "./CropStudio";
-import { OptimizeStudio } from "./OptimizeStudio";
-import { ScaledSlide } from "./ScaledSlide";
-import { SlideCanvas } from "./SlideCanvas";
+  createPipelineImage,
+  isCropComplete,
+  isOptimizeComplete,
+  MIN_IMAGES,
+  type PipelineImage,
+  type PostText,
+  revokePipelineImage,
+} from "./pipeline";
+import { Stepper, type StepDefinition } from "./Stepper";
+import { UploadStep } from "./UploadStep";
 
-type Tab = "create" | "crop" | "optimize";
-
-const tabs: { id: Tab; label: string; icon: typeof Images }[] = [
+const steps: StepDefinition[] = [
+  { id: "upload", label: "Enviar fotos", icon: UploadCloud },
+  { id: "optimize", label: "Otimizar", icon: Sparkles },
+  { id: "crop", label: "Recortar", icon: Crop },
   { id: "create", label: "Criar posts", icon: Images },
-  { id: "crop", label: "Crop", icon: Crop },
-  { id: "optimize", label: "Otimização", icon: Sparkles },
 ];
 
 function App() {
-  const [tab, setTab] = useState<Tab>("create");
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [downloadState, setDownloadState] = useState<
-    "idle" | "saving" | "saved"
-  >("idle");
-  const canvasRef = useRef<HTMLElement>(null);
-  const selectedSlide = carousel.slides[selectedIndex];
+  const [images, setImages] = useState<PipelineImage[]>([]);
+  const [postTexts, setPostTexts] = useState<Record<string, PostText>>({});
+  const [stepIndex, setStepIndex] = useState(0);
+  const [maxStepReached, setMaxStepReached] = useState(0);
+  const imagesRef = useRef(images);
 
-  async function downloadSlide() {
-    if (!canvasRef.current || downloadState === "saving") return;
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
 
-    setDownloadState("saving");
-    try {
-      await document.fonts.ready;
-      const dataUrl = await toPng(canvasRef.current, {
-        width: 1080,
-        height: 1350,
-        pixelRatio: 1,
-        cacheBust: true,
-        style: {
-          transform: "none",
-          transformOrigin: "top left",
-        },
-      });
-      const link = document.createElement("a");
-      link.download = `${carousel.slug}-${String(selectedSlide.id).padStart(2, "0")}.png`;
-      link.href = dataUrl;
-      link.click();
-      setDownloadState("saved");
-      window.setTimeout(() => setDownloadState("idle"), 1800);
-    } catch (error) {
-      console.error("Não foi possível exportar o slide.", error);
-      setDownloadState("idle");
-    }
+  useEffect(
+    () => () => {
+      imagesRef.current.forEach(revokePipelineImage);
+    },
+    [],
+  );
+
+  const completed = useMemo(
+    () => [
+      images.length >= MIN_IMAGES,
+      isOptimizeComplete(images),
+      isCropComplete(images),
+      false,
+    ],
+    [images],
+  );
+
+  function addFiles(files: FileList | File[]) {
+    const newImages = Array.from(files).map(createPipelineImage);
+    setImages((current) => [...current, ...newImages]);
+  }
+
+  function removeImage(id: string) {
+    setImages((current) => {
+      const image = current.find((entry) => entry.id === id);
+      if (image) revokePipelineImage(image);
+      return current.filter((entry) => entry.id !== id);
+    });
+    setPostTexts((current) => {
+      if (!(id in current)) return current;
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+  }
+
+  function goToStep(index: number) {
+    if (index <= maxStepReached) setStepIndex(index);
+  }
+
+  function advanceTo(index: number) {
+    setMaxStepReached((current) => Math.max(current, index));
+    setStepIndex(index);
   }
 
   return (
@@ -69,139 +88,48 @@ function App() {
           <span>FRAME</span>
         </a>
 
-        <nav className="tabs" aria-label="Ferramentas">
-          {tabs.map(({ id, label, icon: Icon }) => (
-            <button
-              className={tab === id ? "tab active" : "tab"}
-              key={id}
-              onClick={() => setTab(id)}
-              type="button"
-              aria-current={tab === id ? "page" : undefined}
-            >
-              <Icon size={17} strokeWidth={1.8} />
-              {label}
-            </button>
-          ))}
-        </nav>
+        <Stepper
+          steps={steps}
+          currentIndex={stepIndex}
+          completed={completed}
+          maxReachedIndex={maxStepReached}
+          onSelect={goToStep}
+        />
 
         <div className="format-pill">
           <ScanLine size={15} />{" "}
-          {tab === "crop"
-            ? "Formatos Instagram"
-            : tab === "optimize"
-              ? "100% no navegador"
-              : carousel.format}
+          {images.length ? `${images.length} imagens` : "Nenhuma imagem"}
         </div>
       </header>
 
-      {tab === "create" ? (
-        <section className="studio">
-          <aside className="project-panel">
-            <div>
-              <p className="eyebrow">CARROSSEL ATUAL</p>
-              <h1>{carousel.title}</h1>
-              <p className="project-path">carousels/{carousel.slug}</p>
-            </div>
-
-            <dl className="project-meta">
-              <div>
-                <dt>Formato</dt>
-                <dd>Retrato · 4:5</dd>
-              </div>
-              <div>
-                <dt>Slides</dt>
-                <dd>{carousel.slides.length} peças</dd>
-              </div>
-              <div>
-                <dt>Saída</dt>
-                <dd>PNG · alta qualidade</dd>
-              </div>
-            </dl>
-
-            <div className="code-note">
-              <span className="code-note-icon">&lt;/&gt;</span>
-              <div>
-                <strong>Conteúdo em código</strong>
-                <p>Textos, imagens e estilos vivem nos arquivos do projeto.</p>
-              </div>
-            </div>
-          </aside>
-
-          <section
-            className="preview-area"
-            aria-label="Prévia do slide selecionado"
-          >
-            <div className="preview-heading">
-              <div>
-                <span className="eyebrow">PRÉVIA</span>
-                <strong>
-                  Slide {selectedIndex + 1} de {carousel.slides.length}
-                </strong>
-              </div>
-              <button
-                className="download-button"
-                type="button"
-                onClick={downloadSlide}
-                disabled={downloadState === "saving"}
-              >
-                {downloadState === "saved" ? (
-                  <Check size={18} />
-                ) : (
-                  <Download size={18} />
-                )}
-                {downloadState === "saving"
-                  ? "Preparando…"
-                  : downloadState === "saved"
-                    ? "Baixado"
-                    : "Baixar PNG"}
-              </button>
-            </div>
-
-            <div className="canvas-stage">
-              <ScaledSlide className="canvas-preview" slide={selectedSlide} />
-              <div className="export-canvas" aria-hidden="true">
-                <div
-                  ref={(node) => {
-                    canvasRef.current =
-                      node?.firstElementChild as HTMLElement | null;
-                  }}
-                >
-                  <SlideCanvas slide={selectedSlide} />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <aside className="slides-panel">
-            <div className="slides-heading">
-              <span className="eyebrow">SEQUÊNCIA</span>
-              <span>{carousel.slides.length}</span>
-            </div>
-            <div className="slide-list">
-              {carousel.slides.map((slide, index) => (
-                <button
-                  type="button"
-                  className={
-                    selectedIndex === index ? "thumbnail selected" : "thumbnail"
-                  }
-                  onClick={() => setSelectedIndex(index)}
-                  key={slide.id}
-                  aria-label={`Selecionar slide ${index + 1}`}
-                  aria-pressed={selectedIndex === index}
-                >
-                  <span className="thumbnail-number">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <ScaledSlide className="thumbnail-canvas" slide={slide} />
-                </button>
-              ))}
-            </div>
-          </aside>
-        </section>
-      ) : tab === "crop" ? (
-        <CropStudio />
+      {stepIndex === 0 ? (
+        <UploadStep
+          images={images}
+          onAddFiles={addFiles}
+          onRemove={removeImage}
+          onContinue={() => advanceTo(1)}
+        />
+      ) : stepIndex === 1 ? (
+        <OptimizeStep
+          images={images}
+          setImages={setImages}
+          onRemove={removeImage}
+          onContinue={() => advanceTo(2)}
+          canContinue={completed[1]}
+        />
+      ) : stepIndex === 2 ? (
+        <CropStep
+          images={images}
+          setImages={setImages}
+          onContinue={() => advanceTo(3)}
+          canContinue={completed[2]}
+        />
       ) : (
-        <OptimizeStudio />
+        <CreateStep
+          images={images}
+          postTexts={postTexts}
+          setPostTexts={setPostTexts}
+        />
       )}
     </main>
   );
