@@ -1,13 +1,12 @@
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import type { Slide } from "./carousel";
-import { SlideCanvas } from "./SlideCanvas";
 
 type ScaledSlideProps = {
   className: string;
-  slide: Slide;
+  children: ReactNode;
 };
 
-export function ScaledSlide({ className, slide }: ScaledSlideProps) {
+export function ScaledSlide({ className, children }: ScaledSlideProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
 
@@ -26,7 +25,7 @@ export function ScaledSlide({ className, slide }: ScaledSlideProps) {
   return (
     <div className={className} ref={frameRef}>
       <div className="scaled-slide" style={{ transform: `scale(${scale})` }}>
-        <SlideCanvas slide={slide} />
+        {children}
       </div>
     </div>
   );

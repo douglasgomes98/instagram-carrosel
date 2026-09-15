@@ -1,20 +1,21 @@
+import { Crop, Images, Sparkles, UploadCloud } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Crop, FileArchive, Images, Sparkles, UploadCloud } from "lucide-react";
-import { CreateStep } from "./CreateStep";
-import { CropStep } from "./CropStep";
-import { downloadBlob, downloadZip } from "./download";
-import { OptimizeStep } from "./OptimizeStep";
+import type { StepDefinition } from "./components/Stepper";
+import { AppShell } from "./layout/AppShell";
+import { downloadBlob, downloadZip } from "./lib/download";
 import {
   createPipelineImage,
   isCropComplete,
   isOptimizeComplete,
   MIN_IMAGES,
   type PipelineImage,
-  type PostText,
   revokePipelineImage,
-} from "./pipeline";
-import { Stepper, type StepDefinition } from "./Stepper";
-import { UploadStep } from "./UploadStep";
+} from "./lib/pipeline";
+import type { SlideConfig } from "./lib/slides";
+import { CreateStep } from "./pages/CreateStep";
+import { CropStep } from "./pages/CropStep";
+import { OptimizeStep } from "./pages/OptimizeStep";
+import { UploadStep } from "./pages/UploadStep";
 
 const steps: StepDefinition[] = [
   { id: "upload", label: "Enviar fotos", icon: UploadCloud },
@@ -25,7 +26,9 @@ const steps: StepDefinition[] = [
 
 function App() {
   const [images, setImages] = useState<PipelineImage[]>([]);
-  const [postTexts, setPostTexts] = useState<Record<string, PostText>>({});
+  const [slideConfigs, setSlideConfigs] = useState<Record<string, SlideConfig>>(
+    {},
+  );
   const [stepIndex, setStepIndex] = useState(0);
   const [maxStepReached, setMaxStepReached] = useState(0);
   const [isZipping, setIsZipping] = useState(false);
@@ -113,7 +116,7 @@ function App() {
       if (image) revokePipelineImage(image);
       return current.filter((entry) => entry.id !== id);
     });
-    setPostTexts((current) => {
+    setSlideConfigs((current) => {
       if (!(id in current)) return current;
       const next = { ...current };
       delete next[id];
@@ -131,42 +134,23 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
-      <header className="topbar">
-        <a className="brand" href="/" aria-label="Frame, início">
-          <span className="brand-symbol" aria-hidden="true">
-            ✣
-          </span>
-          <span>FRAME</span>
-        </a>
-
-        <Stepper
-          steps={steps}
-          currentIndex={stepIndex}
-          completed={completed}
-          maxReachedIndex={maxStepReached}
-          onSelect={goToStep}
-        />
-
-        {stepIndex >= 1 && zipSource.length > 0 ? (
-          <div className="topbar-actions">
-            <button
-              className="header-zip-button"
-              type="button"
-              onClick={downloadZipBundle}
-              disabled={isZipping}
-            >
-              <FileArchive size={15} />
-              {isZipping
-                ? "Criando ZIP…"
-                : zipSource.length === 1
-                  ? "Baixar imagem"
-                  : "Baixar ZIP"}
-            </button>
-          </div>
-        ) : null}
-      </header>
-
+    <AppShell
+      steps={steps}
+      stepIndex={stepIndex}
+      completed={completed}
+      maxStepReached={maxStepReached}
+      onSelectStep={goToStep}
+      showZipButton={stepIndex >= 1 && zipSource.length > 0}
+      zipLabel={
+        isZipping
+          ? "Criando ZIP…"
+          : zipSource.length === 1
+            ? "Baixar imagem"
+            : "Baixar ZIP"
+      }
+      isZipping={isZipping}
+      onDownloadZip={downloadZipBundle}
+    >
       {stepIndex === 0 ? (
         <UploadStep
           images={images}
@@ -192,11 +176,11 @@ function App() {
       ) : (
         <CreateStep
           images={images}
-          postTexts={postTexts}
-          setPostTexts={setPostTexts}
+          slideConfigs={slideConfigs}
+          setSlideConfigs={setSlideConfigs}
         />
       )}
-    </main>
+    </AppShell>
   );
 }
 

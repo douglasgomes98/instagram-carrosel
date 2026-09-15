@@ -1,5 +1,3 @@
-import { useEffect, useRef, useState } from "react";
-import Cropper, { type Area, type Point } from "react-easy-crop";
 import {
   Check,
   Download,
@@ -7,8 +5,10 @@ import {
   RotateCcw,
   RotateCw,
 } from "lucide-react";
-import { cropImage } from "./cropImage";
-import { CAROUSEL_FORMAT, type PipelineImage } from "./pipeline";
+import { useEffect, useRef, useState } from "react";
+import Cropper, { type Area, type Point } from "react-easy-crop";
+import { cropImage } from "../lib/cropImage";
+import { CAROUSEL_FORMAT, type PipelineImage } from "../lib/pipeline";
 
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.01;

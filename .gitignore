@@ -4,6 +4,7 @@ dist/
 vite.config.js
 vite.config.d.ts
 .DS_Store
+.playwright-mcp/
 
 # Local archives and source images.
 *.zip

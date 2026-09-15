@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./templates/templates.css";
 
 :root {
   --color-primary: #cc785c;
@@ -311,7 +312,8 @@ input:focus-visible {
 }
 
 .field input,
-.field textarea {
+.field textarea,
+.field select {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--color-hairline);
@@ -324,10 +326,17 @@ input:focus-visible {
 }
 
 .field input:focus-visible,
-.field textarea:focus-visible {
+.field textarea:focus-visible,
+.field select:focus-visible {
   border-color: var(--color-primary);
   outline: 3px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
   outline-offset: 1px;
+}
+
+.field-hint {
+  margin: -6px 0 4px;
+  color: var(--color-muted);
+  font-size: 12px;
 }
 
 .preview-area {
@@ -1186,115 +1195,6 @@ input:focus-visible {
   to {
     transform: rotate(360deg);
   }
-}
-
-/* Canvas styles use fixed pixels so the preview and exported PNG stay identical. */
-.slide-canvas {
-  position: relative;
-  width: 1080px;
-  height: 1350px;
-  overflow: hidden;
-  color: var(--color-ink);
-  font-family: var(--font-body);
-}
-
-.slide-safe {
-  position: absolute;
-  inset: 78px;
-}
-
-.slide-topline {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  color: var(--color-on-dark);
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: 0.13em;
-}
-
-.slide-topline.dark {
-  color: var(--color-ink);
-}
-
-.slide-mark {
-  width: 60px;
-  height: 60px;
-  flex: none;
-  border-radius: 0;
-  background: transparent;
-  color: var(--color-ink);
-  font-size: 42px;
-}
-
-.slide-mark.light {
-  background: transparent;
-  color: var(--color-ink);
-}
-
-.slide-cover .slide-mark {
-  border-radius: var(--radius-full);
-  background: var(--color-canvas);
-}
-
-.slide-cover {
-  background: var(--color-surface-dark);
-}
-
-.cover-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 52% center;
-}
-
-.cover-scrim {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-ink) 32%, transparent) 0%,
-    color-mix(in srgb, var(--color-ink) 2%, transparent) 34%,
-    color-mix(in srgb, var(--color-ink) 90%, transparent) 100%
-  );
-}
-
-.cover-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.cover-content h2 {
-  max-width: 880px;
-  margin: auto 0 58px;
-  color: var(--color-on-dark);
-  font-family: var(--font-display);
-  font-size: 133px;
-  font-weight: 400;
-  line-height: 0.9;
-  letter-spacing: -0.065em;
-}
-
-.cover-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 34px;
-  border-top: 2px solid
-    color-mix(in srgb, var(--color-on-dark) 50%, transparent);
-  color: var(--color-on-dark);
-  font-size: 29px;
-  font-weight: 500;
-}
-
-.round-arrow {
-  display: grid;
-  place-items: center;
-  width: 62px;
-  height: 62px;
-  border: 2px solid var(--color-on-dark);
-  border-radius: 50%;
-  font-size: 29px;
 }
 
 @media (max-width: 1120px) {

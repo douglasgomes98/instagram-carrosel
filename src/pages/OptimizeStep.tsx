@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   Download,
@@ -8,9 +7,14 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
-import { downloadBlob } from "./download";
-import { formatBytes, optimizeImage, savingsPercent } from "./imageOptimizer";
-import { OPTIMIZE_SETTINGS, type PipelineImage } from "./pipeline";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { downloadBlob } from "../lib/download";
+import {
+  formatBytes,
+  optimizeImage,
+  savingsPercent,
+} from "../lib/imageOptimizer";
+import { OPTIMIZE_SETTINGS, type PipelineImage } from "../lib/pipeline";
 
 const MAX_PARALLEL_JOBS = 3;
 

@@ -1,0 +1,417 @@
+/* Post Identity Design System: Starbucks Canvas/Colors + ElevenLabs Typography */
+
+:root {
+  /* Four-Tier Green Brand System */
+  --post-starbucks-green: #006241;
+  --post-green-accent: #00754a;
+  --post-house-green: #1e3932;
+  --post-green-uplift: #2b5148;
+  --post-green-light: #d4e9e2;
+  --post-rewards-green: #33433d;
+
+  /* Gold Accents (Prestige & Status) */
+  --post-gold: #cba258;
+  --post-gold-light: #dfc49d;
+  --post-gold-lightest: #faf6ee;
+
+  /* Surface & Canvas Neutrals */
+  --post-neutral-warm: #f2f0eb;
+  --post-ceramic: #edebe9;
+  --post-neutral-cool: #f9f9f9;
+  --post-white: #ffffff;
+  --post-black: #000000;
+
+  /* Typography Text Colors */
+  --post-text-black: rgba(0, 0, 0, 0.87);
+  --post-text-black-soft: rgba(0, 0, 0, 0.58);
+  --post-text-white: #ffffff;
+  --post-text-white-soft: rgba(255, 255, 255, 0.7);
+
+  /* Semantic */
+  --post-red: #c82014;
+  --post-red-tint: hsl(4 82% 43% / 5%);
+  --post-green-tint: hsl(160 32% 87% / 33%);
+
+  /* Typography - ElevenLabs Waldenburg Light + Inter */
+  --post-font-display:
+    "Waldenburg Light", "Waldenburg", "EB Garamond", "Times New Roman", serif;
+  --post-font-body:
+    Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Radii */
+  --post-radius-pill: 50px;
+  --post-radius-card: 12px;
+  --post-radius-circle: 50%;
+
+  /* Shadows */
+  --post-shadow-card:
+    0 0 0.5px rgba(0, 0, 0, 0.14), 0 1px 1px rgba(0, 0, 0, 0.24);
+  --post-shadow-card-elevated:
+    0 0 6px rgba(0, 0, 0, 0.24), 0 8px 12px rgba(0, 0, 0, 0.14);
+}
+
+/* Base Slide Canvas (1080 x 1350) */
+.post-slide {
+  position: relative;
+  width: 1080px;
+  height: 1350px;
+  overflow: hidden;
+  box-sizing: border-box;
+  font-family: var(--post-font-body);
+  user-select: none;
+}
+
+/* Theme Backgrounds */
+.post-theme-cream {
+  background-color: var(--post-neutral-warm);
+  color: var(--post-text-black);
+}
+
+.post-theme-house-green {
+  background-color: var(--post-house-green);
+  color: var(--post-text-white);
+}
+
+.post-theme-ceramic {
+  background-color: var(--post-ceramic);
+  color: var(--post-text-black);
+}
+
+.post-theme-white {
+  background-color: var(--post-white);
+  color: var(--post-text-black);
+}
+
+.post-theme-gold-lightest {
+  background-color: var(--post-gold-lightest);
+  color: var(--post-text-black);
+}
+
+/* Slide Safe Layout Container */
+.post-safe-area {
+  position: absolute;
+  inset: 72px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  z-index: 2;
+}
+
+/* Typography Utility Classes */
+.post-display-headline {
+  font-family: var(--post-font-display);
+  font-weight: 300;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  margin: 0;
+}
+
+.post-display-mega {
+  font-size: 88px;
+}
+
+.post-display-xl {
+  font-size: 72px;
+}
+
+.post-display-lg {
+  font-size: 56px;
+}
+
+.post-display-md {
+  font-size: 44px;
+}
+
+.post-display-sm {
+  font-size: 34px;
+}
+
+.post-title-editorial {
+  font-family: var(--post-font-body);
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.post-body-text {
+  font-family: var(--post-font-body);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.16px;
+}
+
+.post-body-muted {
+  color: var(--post-text-black-soft);
+}
+
+.post-theme-house-green .post-body-muted {
+  color: var(--post-text-white-soft);
+}
+
+.post-caption-caps {
+  font-family: var(--post-font-body);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+/* Atoms: Badges and Pills */
+.post-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--post-radius-pill);
+  font-family: var(--post-font-body);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 8px 20px;
+  box-sizing: border-box;
+  width: max-content;
+}
+
+.post-badge-green-accent {
+  background-color: var(--post-green-accent);
+  color: var(--post-white);
+  border: 1px solid var(--post-green-accent);
+}
+
+.post-badge-green-light {
+  background-color: var(--post-green-light);
+  color: var(--post-starbucks-green);
+  border: 1px solid transparent;
+}
+
+.post-badge-gold {
+  background-color: transparent;
+  color: var(--post-gold);
+  border: 1.5px solid var(--post-gold);
+}
+
+.post-badge-gold-filled {
+  background-color: var(--post-gold);
+  color: var(--post-house-green);
+  border: 1px solid var(--post-gold);
+}
+
+.post-badge-outline-dark {
+  background-color: transparent;
+  color: var(--post-text-black);
+  border: 1.5px solid var(--post-text-black);
+}
+
+.post-badge-outline-white {
+  background-color: transparent;
+  color: var(--post-white);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+}
+
+.post-badge-dark {
+  background-color: var(--post-house-green);
+  color: var(--post-white);
+  border: 1px solid var(--post-house-green);
+}
+
+/* Atoms: Buttons */
+.post-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border-radius: var(--post-radius-pill);
+  font-family: var(--post-font-body);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.16px;
+  padding: 16px 36px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: max-content;
+}
+
+.post-button:active {
+  transform: scale(0.95);
+}
+
+.post-button-primary {
+  background-color: var(--post-green-accent);
+  color: var(--post-white);
+  border: 1px solid var(--post-green-accent);
+}
+
+.post-button-outline {
+  background-color: transparent;
+  color: var(--post-green-accent);
+  border: 2px solid var(--post-green-accent);
+}
+
+.post-button-inverted {
+  background-color: var(--post-white);
+  color: var(--post-green-accent);
+  border: 1px solid var(--post-white);
+}
+
+.post-button-outline-white {
+  background-color: transparent;
+  color: var(--post-white);
+  border: 2px solid var(--post-white);
+}
+
+.post-button-black {
+  background-color: var(--post-black);
+  color: var(--post-white);
+  border: 1px solid var(--post-black);
+}
+
+/* Atoms: Cards */
+.post-card {
+  border-radius: var(--post-radius-card);
+  box-sizing: border-box;
+  box-shadow: var(--post-shadow-card);
+  padding: 36px;
+}
+
+.post-card-white {
+  background-color: var(--post-white);
+  color: var(--post-text-black);
+}
+
+.post-card-house-green {
+  background-color: var(--post-house-green);
+  color: var(--post-text-white);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.post-card-ceramic {
+  background-color: var(--post-ceramic);
+  color: var(--post-text-black);
+}
+
+.post-card-gold {
+  background-color: var(--post-gold-lightest);
+  border: 1px solid var(--post-gold-light);
+  color: var(--post-text-black);
+}
+
+/* Header Atom */
+.post-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.post-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.post-header-symbol {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--post-radius-circle);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.post-header-symbol-green {
+  background-color: var(--post-green-accent);
+  color: var(--post-white);
+}
+
+.post-header-symbol-cream {
+  background-color: var(--post-white);
+  color: var(--post-starbucks-green);
+}
+
+.post-header-symbol-dark {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: var(--post-white);
+}
+
+.post-header-kicker {
+  font-family: var(--post-font-body);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.post-header-counter {
+  font-family: var(--post-font-body);
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+/* Footer Atom */
+.post-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-top: 24px;
+  border-top: 1.5px solid rgba(0, 0, 0, 0.08);
+}
+
+.post-theme-house-green .post-footer {
+  border-top-color: rgba(255, 255, 255, 0.15);
+}
+
+.post-footer-handle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--post-font-body);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+.post-footer-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--post-font-body);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.post-swipe-arrow {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--post-radius-circle);
+  border: 1.5px solid currentColor;
+  font-size: 22px;
+  transition: transform 0.2s ease;
+}
+
+/* Floating Frap CTA Button (Signature element) */
+.post-frap-circle {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: var(--post-radius-circle);
+  background-color: var(--post-green-accent);
+  color: var(--post-white);
+  box-shadow:
+    0 0 6px rgba(0, 0, 0, 0.24),
+    0 8px 12px rgba(0, 0, 0, 0.14);
+  font-size: 32px;
+  flex: none;
+}

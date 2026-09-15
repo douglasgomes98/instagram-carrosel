@@ -1,23 +1,33 @@
-import { useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import { Check, Download } from "lucide-react";
-import { carousel, type Slide } from "./carousel";
-import type { PipelineImage, PostText } from "./pipeline";
-import { ScaledSlide } from "./ScaledSlide";
-import { SlideCanvas } from "./SlideCanvas";
-
-const EMPTY_TEXT: PostText = { kicker: "", title: "", footer: "" };
+import { useMemo, useRef, useState } from "react";
+import { ScaledSlide } from "../components/ScaledSlide";
+import { carousel } from "../lib/carousel";
+import type { PipelineImage } from "../lib/pipeline";
+import {
+  buildSlideData,
+  createSlideConfig,
+  EDITABLE_FIELDS,
+  readField,
+  type SlideConfig,
+  type SlideTemplateType,
+  TEMPLATE_OPTIONS,
+  templateAcceptsImage,
+} from "../lib/slides";
+import { SlideTemplateRenderer } from "../templates";
 
 type CreateStepProps = {
   images: PipelineImage[];
-  postTexts: Record<string, PostText>;
-  setPostTexts: React.Dispatch<React.SetStateAction<Record<string, PostText>>>;
+  slideConfigs: Record<string, SlideConfig>;
+  setSlideConfigs: React.Dispatch<
+    React.SetStateAction<Record<string, SlideConfig>>
+  >;
 };
 
 export function CreateStep({
   images,
-  postTexts,
-  setPostTexts,
+  slideConfigs,
+  setSlideConfigs,
 }: CreateStepProps) {
   const visibleImages = useMemo(
     () => images.filter((image) => !!image.cropped),
@@ -34,35 +44,39 @@ export function CreateStep({
     Math.max(visibleImages.length - 1, 0),
   );
   const activeImage = visibleImages[activeIndex];
-  const activeText = activeImage
-    ? (postTexts[activeImage.id] ?? EMPTY_TEXT)
-    : EMPTY_TEXT;
+  const activeConfig = activeImage
+    ? (slideConfigs[activeImage.id] ?? createSlideConfig())
+    : createSlideConfig();
 
-  const slides: Slide[] = useMemo(
+  const slidesData = useMemo(
     () =>
-      visibleImages.map((image, index) => {
-        const text = postTexts[image.id] ?? EMPTY_TEXT;
-        return {
-          id: index + 1,
-          type: "cover",
-          kicker: text.kicker,
-          title: text.title,
-          footer: text.footer,
-          image: image.cropped?.url,
-        };
+      visibleImages.map((image) => {
+        const config = slideConfigs[image.id] ?? createSlideConfig();
+        return buildSlideData(config, image.cropped?.url);
       }),
-    [visibleImages, postTexts],
+    [visibleImages, slideConfigs],
   );
 
-  const selectedSlide = slides[activeIndex];
+  const selectedSlide = slidesData[activeIndex];
+  const editableFields = EDITABLE_FIELDS[activeConfig.templateId];
 
-  function updateActiveText(field: keyof PostText, value: string) {
+  function updateActiveConfig(next: Partial<SlideConfig>) {
     if (!activeImage) return;
     const id = activeImage.id;
-    setPostTexts((current) => ({
+    setSlideConfigs((current) => ({
       ...current,
-      [id]: { ...(current[id] ?? EMPTY_TEXT), [field]: value },
+      [id]: { ...(current[id] ?? createSlideConfig()), ...next },
     }));
+  }
+
+  function setActiveTemplate(templateId: SlideTemplateType) {
+    updateActiveConfig({ templateId, overrides: {} });
+  }
+
+  function updateActiveField(key: string, value: string) {
+    updateActiveConfig({
+      overrides: { ...activeConfig.overrides, [key]: value },
+    });
   }
 
   async function downloadSlide() {
@@ -118,7 +132,7 @@ export function CreateStep({
           </div>
           <div>
             <dt>Slides</dt>
-            <dd>{slides.length} peças</dd>
+            <dd>{slidesData.length} peças</dd>
           </div>
           <div>
             <dt>Saída</dt>
@@ -127,40 +141,59 @@ export function CreateStep({
         </dl>
 
         <div className="text-form">
+          <p className="eyebrow">TEMPLATE DO SLIDE {activeIndex + 1}</p>
+          <label className="field" htmlFor="slide-template-select">
+            <span>Template</span>
+            <select
+              id="slide-template-select"
+              value={activeConfig.templateId}
+              onChange={(event) =>
+                setActiveTemplate(event.target.value as SlideTemplateType)
+              }
+            >
+              {TEMPLATE_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {!templateAcceptsImage(activeConfig.templateId) ? (
+            <p className="field-hint">
+              Este template não usa a foto recortada.
+            </p>
+          ) : null}
+
           <p className="eyebrow">TEXTO DO SLIDE {activeIndex + 1}</p>
-          <label className="field">
-            <span>Kicker</span>
-            <input
-              type="text"
-              value={activeText.kicker}
-              onChange={(event) =>
-                updateActiveText("kicker", event.target.value)
-              }
-              placeholder="Ex.: GUIA DE MERCADO · 01"
-            />
-          </label>
-          <label className="field">
-            <span>Título</span>
-            <textarea
-              rows={3}
-              value={activeText.title}
-              onChange={(event) =>
-                updateActiveText("title", event.target.value)
-              }
-              placeholder="Título do slide"
-            />
-          </label>
-          <label className="field">
-            <span>Rodapé</span>
-            <input
-              type="text"
-              value={activeText.footer}
-              onChange={(event) =>
-                updateActiveText("footer", event.target.value)
-              }
-              placeholder="Texto de rodapé"
-            />
-          </label>
+          {editableFields.map((field) => {
+            const fieldId = `slide-field-${field.key}`;
+            return (
+              <label className="field" key={field.key} htmlFor={fieldId}>
+                <span>{field.label}</span>
+                {field.kind === "textarea" ? (
+                  <textarea
+                    id={fieldId}
+                    rows={3}
+                    value={readField(selectedSlide, field.key)}
+                    onChange={(event) =>
+                      updateActiveField(field.key, event.target.value)
+                    }
+                    placeholder={field.placeholder}
+                  />
+                ) : (
+                  <input
+                    id={fieldId}
+                    type="text"
+                    value={readField(selectedSlide, field.key)}
+                    onChange={(event) =>
+                      updateActiveField(field.key, event.target.value)
+                    }
+                    placeholder={field.placeholder}
+                  />
+                )}
+              </label>
+            );
+          })}
         </div>
       </aside>
 
@@ -172,7 +205,7 @@ export function CreateStep({
           <div>
             <span className="eyebrow">PRÉVIA</span>
             <strong>
-              Slide {activeIndex + 1} de {slides.length}
+              Slide {activeIndex + 1} de {slidesData.length}
             </strong>
           </div>
           <button
@@ -195,7 +228,9 @@ export function CreateStep({
         </div>
 
         <div className="canvas-stage">
-          <ScaledSlide className="canvas-preview" slide={selectedSlide} />
+          <ScaledSlide className="canvas-preview">
+            <SlideTemplateRenderer data={selectedSlide} />
+          </ScaledSlide>
           <div className="export-canvas" aria-hidden="true">
             <div
               ref={(node) => {
@@ -203,7 +238,7 @@ export function CreateStep({
                   node?.firstElementChild as HTMLElement | null;
               }}
             >
-              <SlideCanvas slide={selectedSlide} />
+              <SlideTemplateRenderer data={selectedSlide} />
             </div>
           </div>
         </div>
@@ -212,24 +247,26 @@ export function CreateStep({
       <aside className="slides-panel">
         <div className="slides-heading">
           <span className="eyebrow">SEQUÊNCIA</span>
-          <span>{slides.length}</span>
+          <span>{slidesData.length}</span>
         </div>
         <div className="slide-list">
-          {slides.map((slide, index) => (
+          {slidesData.map((slide, index) => (
             <button
               type="button"
               className={
                 activeIndex === index ? "thumbnail selected" : "thumbnail"
               }
               onClick={() => setSelectedIndex(index)}
-              key={visibleImages[index]?.id ?? slide.id}
+              key={visibleImages[index]?.id ?? index}
               aria-label={`Selecionar slide ${index + 1}`}
               aria-pressed={activeIndex === index}
             >
               <span className="thumbnail-number">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <ScaledSlide className="thumbnail-canvas" slide={slide} />
+              <ScaledSlide className="thumbnail-canvas">
+                <SlideTemplateRenderer data={slide} />
+              </ScaledSlide>
             </button>
           ))}
         </div>

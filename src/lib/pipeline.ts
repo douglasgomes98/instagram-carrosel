@@ -28,12 +28,6 @@ export type PipelineImage = {
   cropped?: { blob: Blob; url: string };
 };
 
-export type PostText = {
-  kicker: string;
-  title: string;
-  footer: string;
-};
-
 export function createPipelineImage(file: File): PipelineImage {
   return {
     id: crypto.randomUUID(),

@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { ImagePlus, UploadCloud, X } from "lucide-react";
-import { MAX_IMAGES, MIN_IMAGES, type PipelineImage } from "./pipeline";
-import { formatBytes } from "./imageOptimizer";
+import { useState } from "react";
+import { formatBytes } from "../lib/imageOptimizer";
+import { MAX_IMAGES, MIN_IMAGES, type PipelineImage } from "../lib/pipeline";
 
 const ACCEPTED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
