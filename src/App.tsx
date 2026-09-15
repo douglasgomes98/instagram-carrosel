@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Crop, Images, ScanLine, Sparkles, UploadCloud } from "lucide-react";
+import { Crop, FileArchive, Images, Sparkles, UploadCloud } from "lucide-react";
 import { CreateStep } from "./CreateStep";
 import { CropStep } from "./CropStep";
+import { downloadBlob, downloadZip } from "./download";
 import { OptimizeStep } from "./OptimizeStep";
 import {
   createPipelineImage,
@@ -27,6 +28,7 @@ function App() {
   const [postTexts, setPostTexts] = useState<Record<string, PostText>>({});
   const [stepIndex, setStepIndex] = useState(0);
   const [maxStepReached, setMaxStepReached] = useState(0);
+  const [isZipping, setIsZipping] = useState(false);
   const imagesRef = useRef(images);
 
   useEffect(() => {
@@ -49,6 +51,56 @@ function App() {
     ],
     [images],
   );
+
+  const croppedImages = useMemo(
+    () => images.filter((image) => !!image.cropped),
+    [images],
+  );
+
+  const optimizedImages = useMemo(
+    () =>
+      images.filter(
+        (image) => image.optimizeStatus === "done" && image.optimized,
+      ),
+    [images],
+  );
+
+  // Prefer the cropped output once it exists; optimized images remain
+  // downloadable in the meantime so the ZIP button is useful right after step 2.
+  const zipSource = croppedImages.length ? croppedImages : optimizedImages;
+  const zipVariant = croppedImages.length ? "recorte" : "otimizada";
+
+  function zipBlobFor(image: PipelineImage) {
+    return zipVariant === "recorte"
+      ? image.cropped?.blob
+      : image.optimized?.blob;
+  }
+
+  async function downloadZipBundle() {
+    if (!zipSource.length || isZipping) return;
+    if (zipSource.length === 1) {
+      const blob = zipBlobFor(zipSource[0]);
+      if (!blob) return;
+      downloadBlob(
+        blob,
+        `${zipSource[0].file.name.replace(/\.[^/.]+$/, "")}-${zipVariant}.jpg`,
+      );
+      return;
+    }
+
+    setIsZipping(true);
+    try {
+      await downloadZip(
+        zipSource.map((image) => ({
+          filename: `${image.file.name.replace(/\.[^/.]+$/, "")}-${zipVariant}.jpg`,
+          blob: zipBlobFor(image) as Blob,
+        })),
+        `imagens-${zipVariant === "recorte" ? "recortadas" : "otimizadas"}-${zipSource.length}.zip`,
+      );
+    } finally {
+      setIsZipping(false);
+    }
+  }
 
   function addFiles(files: FileList | File[]) {
     const newImages = Array.from(files).map(createPipelineImage);
@@ -96,10 +148,23 @@ function App() {
           onSelect={goToStep}
         />
 
-        <div className="format-pill">
-          <ScanLine size={15} />{" "}
-          {images.length ? `${images.length} imagens` : "Nenhuma imagem"}
-        </div>
+        {stepIndex >= 1 && zipSource.length > 0 ? (
+          <div className="topbar-actions">
+            <button
+              className="header-zip-button"
+              type="button"
+              onClick={downloadZipBundle}
+              disabled={isZipping}
+            >
+              <FileArchive size={15} />
+              {isZipping
+                ? "Criando ZIP…"
+                : zipSource.length === 1
+                  ? "Baixar imagem"
+                  : "Baixar ZIP"}
+            </button>
+          </div>
+        ) : null}
       </header>
 
       {stepIndex === 0 ? (

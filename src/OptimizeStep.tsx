@@ -2,14 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   Download,
-  FileArchive,
   ImagePlus,
   LoaderCircle,
   LockKeyhole,
   RefreshCw,
   X,
 } from "lucide-react";
-import { downloadBlob, downloadZip } from "./download";
+import { downloadBlob } from "./download";
 import { formatBytes, optimizeImage, savingsPercent } from "./imageOptimizer";
 import { OPTIMIZE_SETTINGS, type PipelineImage } from "./pipeline";
 
@@ -31,7 +30,6 @@ export function OptimizeStep({
   canContinue,
 }: OptimizeStepProps) {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isZipping, setIsZipping] = useState(false);
   const imagesRef = useRef(images);
   const isProcessingRef = useRef(false);
 
@@ -143,32 +141,6 @@ export function OptimizeStep({
       processQueue();
     }
   }, [images, processQueue]);
-
-  async function downloadAll() {
-    if (!completedImages.length || isZipping) return;
-    if (completedImages.length === 1) {
-      const output = completedImages[0].optimized;
-      if (!output) return;
-      downloadBlob(
-        output.blob,
-        `${completedImages[0].file.name.replace(/\.[^/.]+$/, "")}-otimizada.jpg`,
-      );
-      return;
-    }
-
-    setIsZipping(true);
-    try {
-      await downloadZip(
-        completedImages.map((image) => ({
-          filename: `${image.file.name.replace(/\.[^/.]+$/, "")}-otimizada.jpg`,
-          blob: image.optimized?.blob as Blob,
-        })),
-        `imagens-otimizadas-${completedImages.length}.zip`,
-      );
-    } finally {
-      setIsZipping(false);
-    }
-  }
 
   return (
     <section className="optimize-studio">
@@ -329,21 +301,6 @@ export function OptimizeStep({
             )}
           </div>
           <div className="summary-actions">
-            {completedImages.length ? (
-              <button
-                className="secondary-download"
-                type="button"
-                onClick={downloadAll}
-                disabled={isZipping}
-              >
-                <FileArchive size={18} />{" "}
-                {isZipping
-                  ? "Criando ZIP…"
-                  : completedImages.length === 1
-                    ? "Baixar imagem"
-                    : "Baixar ZIP"}
-              </button>
-            ) : null}
             <button
               className="download-button"
               type="button"

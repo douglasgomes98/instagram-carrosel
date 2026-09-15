@@ -1,15 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Cropper, { type Area, type Point } from "react-easy-crop";
 import {
   Check,
   Download,
-  FileArchive,
   FlipHorizontal2,
   RotateCcw,
   RotateCw,
 } from "lucide-react";
 import { cropImage } from "./cropImage";
-import { downloadBlob, downloadZip } from "./download";
 import { CAROUSEL_FORMAT, type PipelineImage } from "./pipeline";
 
 const MAX_ZOOM = 3;
@@ -37,10 +35,18 @@ export function CropStep({
   const [flipHorizontal, setFlipHorizontal] = useState(false);
   const [croppedArea, setCroppedArea] = useState<Area | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isZipping, setIsZipping] = useState(false);
+  const railRef = useRef<HTMLDivElement>(null);
 
   const activeImage = images.find((image) => image.id === activeId) ?? null;
   const croppedImages = images.filter((image) => !!image.cropped);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail || !activeId) return;
+    rail
+      .querySelector(`[data-image-id="${activeId}"]`)
+      ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [activeId]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: activeId intentionally re-triggers this reset.
   useEffect(() => {
@@ -83,32 +89,6 @@ export function CropStep({
     }
   }
 
-  async function downloadAllCropped() {
-    if (!croppedImages.length || isZipping) return;
-    if (croppedImages.length === 1) {
-      const output = croppedImages[0].cropped;
-      if (!output) return;
-      downloadBlob(
-        output.blob,
-        `${croppedImages[0].file.name.replace(/\.[^/.]+$/, "")}-recorte.jpg`,
-      );
-      return;
-    }
-
-    setIsZipping(true);
-    try {
-      await downloadZip(
-        croppedImages.map((image) => ({
-          filename: `${image.file.name.replace(/\.[^/.]+$/, "")}-recorte.jpg`,
-          blob: image.cropped?.blob as Blob,
-        })),
-        `imagens-recortadas-${croppedImages.length}.zip`,
-      );
-    } finally {
-      setIsZipping(false);
-    }
-  }
-
   return (
     <section className="crop-studio">
       <aside className="crop-formats" aria-label="Imagens do carrossel">
@@ -125,20 +105,21 @@ export function CropStep({
           </p>
         </div>
 
-        <div className="slide-list crop-rail">
+        <div className="slide-list crop-rail" ref={railRef}>
           {images.map((image, index) => (
             <button
               type="button"
               className={`thumbnail${activeId === image.id ? " selected" : ""}${image.cropped ? " done" : ""}`}
               onClick={() => setActiveId(image.id)}
               key={image.id}
+              data-image-id={image.id}
               aria-label={`Selecionar imagem ${index + 1}`}
               aria-pressed={activeId === image.id}
             >
               <span className="thumbnail-number">
                 {image.cropped ? <Check size={13} /> : index + 1}
               </span>
-              <span className="thumbnail-canvas">
+              <div className="thumbnail-canvas">
                 <img
                   src={
                     image.cropped?.url ??
@@ -147,7 +128,7 @@ export function CropStep({
                   }
                   alt=""
                 />
-              </span>
+              </div>
             </button>
           ))}
         </div>
@@ -158,6 +139,28 @@ export function CropStep({
           <div>
             <p className="eyebrow">ENQUADRAMENTO</p>
             <strong>{activeImage?.file.name ?? "Selecione uma imagem"}</strong>
+          </div>
+          <div
+            className="crop-progress"
+            role="progressbar"
+            aria-label="Progresso do recorte"
+            aria-valuemin={0}
+            aria-valuemax={images.length}
+            aria-valuenow={croppedImages.length}
+          >
+            <div className="crop-progress-track">
+              <div
+                className="crop-progress-fill"
+                style={{
+                  width: images.length
+                    ? `${(croppedImages.length / images.length) * 100}%`
+                    : "0%",
+                }}
+              />
+            </div>
+            <span className="crop-progress-count">
+              {croppedImages.length} / {images.length}
+            </span>
           </div>
         </div>
 
@@ -241,58 +244,32 @@ export function CropStep({
               {CAROUSEL_FORMAT.width} × {CAROUSEL_FORMAT.height} px
             </strong>
             <span>
-              {activeImage?.cropped
-                ? "Recorte confirmado"
-                : "Ajuste e confirme"}
+              {canContinue
+                ? "Todas as fotos recortadas"
+                : activeImage?.cropped
+                  ? "Recorte confirmado"
+                  : "Ajuste e confirme"}
             </span>
           </div>
-          <button
-            className="download-button"
-            type="button"
-            onClick={confirmCrop}
-            disabled={!activeImage?.optimized || !croppedArea || isSaving}
-          >
-            <Download size={18} />
-            {isSaving ? "Salvando…" : "Confirmar recorte"}
-          </button>
-        </div>
-
-        <div className="optimize-summary">
-          <div className="summary-copy">
-            <span>
-              <strong>
-                {croppedImages.length} / {images.length} recortadas
-              </strong>
-              <small>
-                Você pode baixar o ZIP a qualquer momento e continuar depois.
-              </small>
-            </span>
-          </div>
-          <div className="summary-actions">
-            {croppedImages.length ? (
-              <button
-                className="secondary-download"
-                type="button"
-                onClick={downloadAllCropped}
-                disabled={isZipping}
-              >
-                <FileArchive size={18} />{" "}
-                {isZipping
-                  ? "Criando ZIP…"
-                  : croppedImages.length === 1
-                    ? "Baixar imagem"
-                    : "Baixar ZIP"}
-              </button>
-            ) : null}
+          {canContinue ? (
             <button
               className="download-button"
               type="button"
               onClick={onContinue}
-              disabled={!canContinue}
             >
               Continuar
             </button>
-          </div>
+          ) : (
+            <button
+              className="download-button"
+              type="button"
+              onClick={confirmCrop}
+              disabled={!activeImage?.optimized || !croppedArea || isSaving}
+            >
+              <Download size={18} />
+              {isSaving ? "Salvando…" : "Confirmar recorte"}
+            </button>
+          )}
         </div>
       </div>
     </section>
