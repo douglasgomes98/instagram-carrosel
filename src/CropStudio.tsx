@@ -20,7 +20,9 @@ const ZOOM_STEP = 0.01;
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export function CropStudio() {
-  const [image, setImage] = useState(`${import.meta.env.BASE_URL}assets/yogurt.jpg`);
+  const [image, setImage] = useState(
+    `${import.meta.env.BASE_URL}assets/yogurt.jpg`,
+  );
   const [imageName, setImageName] = useState("imagem-instagram");
   const [format, setFormat] = useState<InstagramFormat>(defaultInstagramFormat);
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
@@ -28,12 +30,17 @@ export function CropStudio() {
   const [rotation, setRotation] = useState(0);
   const [flipHorizontal, setFlipHorizontal] = useState(false);
   const [croppedArea, setCroppedArea] = useState<Area | null>(null);
-  const [exportState, setExportState] = useState<"idle" | "saving" | "error">("idle");
+  const [exportState, setExportState] = useState<"idle" | "saving" | "error">(
+    "idle",
+  );
   const objectUrlRef = useRef<string | null>(null);
 
-  useEffect(() => () => {
-    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    },
+    [],
+  );
 
   const resetPosition = useCallback(() => {
     setCrop({ x: 0, y: 0 });
@@ -96,7 +103,10 @@ export function CropStudio() {
         <div>
           <p className="eyebrow">FORMATO DE SAÍDA</p>
           <h1>Crop para Instagram</h1>
-          <p className="crop-intro">Escolha o destino antes de enquadrar. O arquivo será exportado no tamanho exato.</p>
+          <p className="crop-intro">
+            Escolha o destino antes de enquadrar. O arquivo será exportado no
+            tamanho exato.
+          </p>
         </div>
 
         <div className="format-list">
@@ -104,16 +114,28 @@ export function CropStudio() {
             <button
               key={option.id}
               type="button"
-              className={format.id === option.id ? "format-option selected" : "format-option"}
+              className={
+                format.id === option.id
+                  ? "format-option selected"
+                  : "format-option"
+              }
               onClick={() => selectFormat(option)}
+              aria-pressed={format.id === option.id}
             >
-              <span className="format-shape" style={{ aspectRatio: `${option.width} / ${option.height}` }} />
+              <span
+                className="format-shape"
+                style={{ aspectRatio: `${option.width} / ${option.height}` }}
+              />
               <span className="format-copy">
                 <strong>{option.label}</strong>
                 <small>{option.placement}</small>
               </span>
-              <span className="format-size">{option.width} × {option.height}</span>
-              {option.recommended ? <span className="recommended-tag">RECOMENDADO</span> : null}
+              <span className="format-size">
+                {option.width} × {option.height}
+              </span>
+              {option.recommended ? (
+                <span className="recommended-tag">RECOMENDADO</span>
+              ) : null}
             </button>
           ))}
         </div>
@@ -127,11 +149,18 @@ export function CropStudio() {
           </div>
           <label className="upload-button">
             <Upload size={17} /> Trocar imagem
-            <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => selectImage(event.target.files?.[0])} />
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(event) => selectImage(event.target.files?.[0])}
+            />
           </label>
         </div>
 
-        <div className="crop-frame" style={{ aspectRatio: `${format.width} / ${format.height}` }}>
+        <div
+          className="crop-frame"
+          style={{ aspectRatio: `${format.width} / ${format.height}` }}
+        >
           <Cropper
             image={image}
             crop={crop}
@@ -167,22 +196,59 @@ export function CropStudio() {
             />
             <output>{Math.round(zoom * 100)}%</output>
           </div>
-          <div className="crop-actions" aria-label="Ajustes da imagem">
-            <button type="button" onClick={() => setRotation((value) => value - 90)} aria-label="Girar à esquerda"><RotateCcw size={18} /></button>
-            <button type="button" onClick={() => setRotation((value) => value + 90)} aria-label="Girar à direita"><RotateCw size={18} /></button>
-            <button type="button" className={flipHorizontal ? "active" : ""} onClick={() => setFlipHorizontal((value) => !value)} aria-label="Espelhar horizontalmente"><FlipHorizontal2 size={18} /></button>
-            <button type="button" onClick={resetPosition} aria-label="Restaurar ajustes"><ImagePlus size={18} /></button>
+          <div className="crop-actions">
+            <button
+              type="button"
+              onClick={() => setRotation((value) => value - 90)}
+              aria-label="Girar à esquerda"
+            >
+              <RotateCcw size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setRotation((value) => value + 90)}
+              aria-label="Girar à direita"
+            >
+              <RotateCw size={18} />
+            </button>
+            <button
+              type="button"
+              className={flipHorizontal ? "active" : ""}
+              onClick={() => setFlipHorizontal((value) => !value)}
+              aria-label="Espelhar horizontalmente"
+              aria-pressed={flipHorizontal}
+            >
+              <FlipHorizontal2 size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={resetPosition}
+              aria-label="Restaurar ajustes"
+            >
+              <ImagePlus size={18} />
+            </button>
           </div>
         </div>
 
         <div className="crop-summary">
           <div>
-            <strong>{format.width} × {format.height} px</strong>
+            <strong>
+              {format.width} × {format.height} px
+            </strong>
             <span>{format.note}</span>
           </div>
-          <button className="download-button" type="button" onClick={downloadCrop} disabled={!croppedArea || exportState === "saving"}>
+          <button
+            className="download-button"
+            type="button"
+            onClick={downloadCrop}
+            disabled={!croppedArea || exportState === "saving"}
+          >
             <Download size={18} />
-            {exportState === "saving" ? "Exportando…" : exportState === "error" ? "Tentar novamente" : "Baixar JPG"}
+            {exportState === "saving"
+              ? "Exportando…"
+              : exportState === "error"
+                ? "Tentar novamente"
+                : "Baixar JPG"}
           </button>
         </div>
       </div>

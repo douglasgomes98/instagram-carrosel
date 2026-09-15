@@ -1,8 +1,17 @@
 import { useRef, useState } from "react";
 import { toPng } from "html-to-image";
-import { Check, Crop, Download, Images, ScanLine, Sparkles } from "lucide-react";
+import {
+  Check,
+  Crop,
+  Download,
+  Images,
+  ScanLine,
+  Sparkles,
+} from "lucide-react";
 import { carousel } from "./carousel";
 import { CropStudio } from "./CropStudio";
+import { OptimizeStudio } from "./OptimizeStudio";
+import { ScaledSlide } from "./ScaledSlide";
 import { SlideCanvas } from "./SlideCanvas";
 
 type Tab = "create" | "crop" | "optimize";
@@ -16,7 +25,9 @@ const tabs: { id: Tab; label: string; icon: typeof Images }[] = [
 function App() {
   const [tab, setTab] = useState<Tab>("create");
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [downloadState, setDownloadState] = useState<"idle" | "saving" | "saved">("idle");
+  const [downloadState, setDownloadState] = useState<
+    "idle" | "saving" | "saved"
+  >("idle");
   const canvasRef = useRef<HTMLElement>(null);
   const selectedSlide = carousel.slides[selectedIndex];
 
@@ -51,8 +62,10 @@ function App() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <a className="brand" href="#" aria-label="Frame, início">
-          <span className="brand-symbol" aria-hidden="true">✣</span>
+        <a className="brand" href="/" aria-label="Frame, início">
+          <span className="brand-symbol" aria-hidden="true">
+            ✣
+          </span>
           <span>FRAME</span>
         </a>
 
@@ -63,16 +76,21 @@ function App() {
               key={id}
               onClick={() => setTab(id)}
               type="button"
+              aria-current={tab === id ? "page" : undefined}
             >
               <Icon size={17} strokeWidth={1.8} />
               {label}
-              {id === "optimize" ? <span className="soon-dot" aria-label="Em breve" /> : null}
             </button>
           ))}
         </nav>
 
         <div className="format-pill">
-          <ScanLine size={15} /> {tab === "crop" ? "Formatos Instagram" : carousel.format}
+          <ScanLine size={15} />{" "}
+          {tab === "crop"
+            ? "Formatos Instagram"
+            : tab === "optimize"
+              ? "100% no navegador"
+              : carousel.format}
         </div>
       </header>
 
@@ -86,9 +104,18 @@ function App() {
             </div>
 
             <dl className="project-meta">
-              <div><dt>Formato</dt><dd>Retrato · 4:5</dd></div>
-              <div><dt>Slides</dt><dd>{carousel.slides.length} peças</dd></div>
-              <div><dt>Saída</dt><dd>PNG · alta qualidade</dd></div>
+              <div>
+                <dt>Formato</dt>
+                <dd>Retrato · 4:5</dd>
+              </div>
+              <div>
+                <dt>Slides</dt>
+                <dd>{carousel.slides.length} peças</dd>
+              </div>
+              <div>
+                <dt>Saída</dt>
+                <dd>PNG · alta qualidade</dd>
+              </div>
             </dl>
 
             <div className="code-note">
@@ -100,24 +127,45 @@ function App() {
             </div>
           </aside>
 
-          <section className="preview-area" aria-label="Prévia do slide selecionado">
+          <section
+            className="preview-area"
+            aria-label="Prévia do slide selecionado"
+          >
             <div className="preview-heading">
               <div>
                 <span className="eyebrow">PRÉVIA</span>
-                <strong>Slide {selectedIndex + 1} de {carousel.slides.length}</strong>
+                <strong>
+                  Slide {selectedIndex + 1} de {carousel.slides.length}
+                </strong>
               </div>
-              <button className="download-button" type="button" onClick={downloadSlide} disabled={downloadState === "saving"}>
-                {downloadState === "saved" ? <Check size={18} /> : <Download size={18} />}
-                {downloadState === "saving" ? "Preparando…" : downloadState === "saved" ? "Baixado" : "Baixar PNG"}
+              <button
+                className="download-button"
+                type="button"
+                onClick={downloadSlide}
+                disabled={downloadState === "saving"}
+              >
+                {downloadState === "saved" ? (
+                  <Check size={18} />
+                ) : (
+                  <Download size={18} />
+                )}
+                {downloadState === "saving"
+                  ? "Preparando…"
+                  : downloadState === "saved"
+                    ? "Baixado"
+                    : "Baixar PNG"}
               </button>
             </div>
 
             <div className="canvas-stage">
-              <div className="canvas-preview">
-                <SlideCanvas slide={selectedSlide} />
-              </div>
+              <ScaledSlide className="canvas-preview" slide={selectedSlide} />
               <div className="export-canvas" aria-hidden="true">
-                <div ref={(node) => { canvasRef.current = node?.firstElementChild as HTMLElement | null; }}>
+                <div
+                  ref={(node) => {
+                    canvasRef.current =
+                      node?.firstElementChild as HTMLElement | null;
+                  }}
+                >
                   <SlideCanvas slide={selectedSlide} />
                 </div>
               </div>
@@ -133,15 +181,18 @@ function App() {
               {carousel.slides.map((slide, index) => (
                 <button
                   type="button"
-                  className={selectedIndex === index ? "thumbnail selected" : "thumbnail"}
+                  className={
+                    selectedIndex === index ? "thumbnail selected" : "thumbnail"
+                  }
                   onClick={() => setSelectedIndex(index)}
                   key={slide.id}
                   aria-label={`Selecionar slide ${index + 1}`}
+                  aria-pressed={selectedIndex === index}
                 >
-                  <span className="thumbnail-number">{String(index + 1).padStart(2, "0")}</span>
-                  <div className="thumbnail-canvas">
-                    <SlideCanvas slide={slide} />
-                  </div>
+                  <span className="thumbnail-number">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <ScaledSlide className="thumbnail-canvas" slide={slide} />
                 </button>
               ))}
             </div>
@@ -150,13 +201,7 @@ function App() {
       ) : tab === "crop" ? (
         <CropStudio />
       ) : (
-        <section className="future-tool">
-          <div className="future-icon"><Sparkles /></div>
-          <p className="eyebrow">PRÓXIMA FERRAMENTA</p>
-          <h1>Otimização de imagens</h1>
-          <p>Área reservada para compactar arquivos e preparar imagens para publicação.</p>
-          <span className="future-status">Estrutura pronta · implementação futura</span>
-        </section>
+        <OptimizeStudio />
       )}
     </main>
   );
